@@ -11,7 +11,7 @@ active_network = network.show_active()
 LOCAL_NETWORKS = ['development', 'mainnet-fork', 'polygon-fork']
 TEST_NETWORKS = ['rinkeby', 'bsc-test', 'mumbai']
 REAL_NETWORKS = ['mainnet', 'polygon']
-DEPLOYED_ADDR = {  # Deployed address of CivCityNFT CityToken
+DEPLOYED_ADDR = {  # Deployed address 
     'rinkeby': "",
     'mumbai': ""
 }
