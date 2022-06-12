@@ -1,3 +1,3 @@
 # NFTFactory
 
-A NFT (ERC721A version) minting factory
+A NFT (ERC1155 version) minting factory
