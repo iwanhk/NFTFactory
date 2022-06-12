@@ -1,5 +1,4 @@
 from scripts.functions import *
-import random
 
 
 def main():
@@ -10,11 +9,17 @@ def main():
 
     try:
         if active_network in LOCAL_NETWORKS:
-            nft = NFT.deploy(addr(admin))
+            nft=NFT.deploy(1000, 3125, 3, addr(admin))
+            nft.setBaseURI("http://isotop.top/")
+            nft.setupNonAuctionSaleInfo(0, chain.time())
+            # nft.mint(100, addr2(creator, 0))
+            # for i in range(100):
+            #     nft.transferFrom(creator, nft, i, addr(creator))
 
 
         if active_network in TEST_NETWORKS:
-            nft = NFT.deploy(addr(admin))
+            nft=NFT[-1]
+
 
     except Exception:
         console.print_exception()

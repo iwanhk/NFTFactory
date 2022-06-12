@@ -9,10 +9,12 @@ def main():
 
     try:
         if active_network in LOCAL_NETWORKS:
-            nft = NFT.deploy(addr(admin))
+            nft=NFT.deploy(10000, 3125, 3, addr(admin))
 
         if active_network in TEST_NETWORKS:
-            nft = NFT.deploy(addr(admin))
+            nft=NFT.deploy(10000, 3125, 3, addr(admin))
+            nft.setBaseURI("http://isotop.top/")
+            nft.setupNonAuctionSaleInfo(0, chain.time())
 
     except Exception:
         console.print_exception()

@@ -6,14 +6,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ERC721A.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-error AddressNotAllowlistVerified();
-
 contract NFT is Ownable, ERC721A {
-    uint256 public immutable maxPerAddressDuringMint;
-    uint256 public immutable collectionSize;
-    uint256 public immutable amountForDevs;
+    using Strings for uint256;
 
-
+    uint256 public immutable ordinaryNumber;
+    uint256 public immutable uniqueNumber;
+    uint256 public immutable fitNumber;
     struct SaleConfig {
         uint32 publicSaleStartTime;
         uint64 publicPriceWei;
@@ -26,17 +24,17 @@ contract NFT is Ownable, ERC721A {
     string private _baseTokenURI;
 
     constructor(
-        uint256 maxBatchSize_,
-        uint256 collectionSize_,
-        uint256 amountForDevs_
-    ) ERC721A("Catchon", "CATCHON") {
-        require(
-            maxBatchSize_ < collectionSize_,
-            "MaxBarchSize should be smaller than collectionSize"
-        );
-        maxPerAddressDuringMint = maxBatchSize_;
-        collectionSize = collectionSize_;
-        amountForDevs = amountForDevs_;
+        uint256 _ordinaryNumber,
+        uint256 _uniqueNumber,
+        uint256 _fitNumber
+    ) ERC721A("Cuttlefish", "CFK") {
+        require(_fitNumber>0 && _ordinaryNumber>=_fitNumber && _uniqueNumber>0, "Invalid arg");
+
+        ordinaryNumber = _ordinaryNumber;
+        uniqueNumber = _uniqueNumber;
+        fitNumber= _fitNumber;
+
+        // _safeMint(msg.sender, _ordinaryNumber);
     }
 
     modifier callerIsUser() {
@@ -44,38 +42,19 @@ contract NFT is Ownable, ERC721A {
         _;
     }
 
-    function devMint(uint256 quantity) external onlyOwner {
-        require(
-            quantity <= amountForDevs,
-            "Too many already minted before dev mint"
-        );
-        require(
-            totalSupply() + quantity <= collectionSize,
-            "Reached max supply"
-        );
-        _safeMint(msg.sender, quantity);
-    }
-    // Public Mint
     // *****************************************************************************
     // Public Functions
-    function mint(uint256 quantity)
-    external
-    payable
-    callerIsUser
-    {
-        require(isPublicSaleOn(), "Public sale has not begun yet");
-        require(
-            totalSupply() + quantity <= collectionSize,
-            "Reached max supply"
-        );
-        require(
-            numberMinted(msg.sender) + quantity <= maxPerAddressDuringMint,
-            "Reached max quantity that one wallet can mint"
-        );
-        uint256 priceWei = quantity * saleConfig.publicPriceWei;
 
-        _safeMint(msg.sender, quantity);
-        refundIfOver(priceWei);
+    function fit(uint256[] calldata tokenIds) external callerIsUser {
+        require(
+            totalSupply() <= uniqueNumber+ ordinaryNumber, "Reached max supply" );
+        require(tokenIds.length== fitNumber, "fitNumber");
+
+        for(uint256 i=0; i< tokenIds.length; i++){
+            transferFrom(msg.sender, owner(), tokenIds[i]);
+        }
+
+        _safeMint(msg.sender, 1);
     }
 
     function isPublicSaleOn() public view returns(bool) {
@@ -91,12 +70,54 @@ contract NFT is Ownable, ERC721A {
 
     // Public Views
     // *****************************************************************************
-    function numberMinted(address minter) public view returns(uint256) {
+    function numberMinted(address minter) external view returns(uint256) {
         return _numberMinted(minter);
+    }
+
+    function getFreeToken(uint256 total) external view returns (uint256[] memory ret){
+        ret= new uint256[](total);
+
+        uint256 j=0;
+        for(uint256 i=0; i< ordinaryNumber; i++){
+            if(ownerOf(i)== owner()){
+                ret[j++]=i;
+                if(j== total){
+                    break;
+                }
+            }
+        }
+        if(j< total){
+            revert("No enough free tokens");
+        }
+    }
+
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
+        require(_exists(tokenId), "Non exists token");
+        if(tokenId< ordinaryNumber){
+            return string(abi.encodePacked(_baseTokenURI, "ordinary.json"));
+        }
+        return string(abi.encodePacked(_baseTokenURI, (tokenId-ordinaryNumber).toString(), ".json"));
     }
 
     // Contract Controls (onlyOwner)
     // *****************************************************************************
+    function mint() external onlyOwner{
+        _safeMint(msg.sender, ordinaryNumber);
+    }
+    function sale(address _to, uint256[] calldata tokenIds) external onlyOwner{
+        require(isPublicSaleOn(), "Public sale has not begun yet");
+
+        for(uint256 i=0; i< tokenIds.length; i++){
+            transferFrom(msg.sender, _to, tokenIds[i]);
+        }
+    }
+
     function setBaseURI(string calldata baseURI) external onlyOwner {
         _baseTokenURI = baseURI;
     }
