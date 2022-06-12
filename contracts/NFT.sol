@@ -69,6 +69,7 @@ contract NFT is Ownable, ERC1155 {
     // ****************************************************************************
 
     function uri(uint256 tokenId) public view virtual override returns (string memory){
+        require(tokenId< uniqueMinted+1, "Non existing token");
         return string(abi.encodePacked(super.uri(tokenId), tokenId.toString(), ".json"));
     }
 
